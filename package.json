@@ -1,0 +1,24 @@
+{
+  "name": "sistemas_expertos",
+  "version": "1.0.0",
+  "description": "Proyecto_Dario",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lomasiltre23/Sistemas-Expertos.git"
+  },
+  "author": "lomasiltre23",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lomasiltre23/Sistemas-Expertos/issues"
+  },
+  "homepage": "https://github.com/lomasiltre23/Sistemas-Expertos#readme",
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "express": "^4.13.4",
+    "jsonfile": "^2.2.3"
+  }
+}

@@ -1,0 +1,10 @@
+#header-wrapper{
+    background-color: #26a69a;
+}
+nav div.nav-wrapper ul.collection{
+    margin: 0.5rem 1rem 1rem 0;
+}
+
+nav div.nav-wrapper span.brand-logo{
+    margin-left: 1rem;
+}

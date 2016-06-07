@@ -1,0 +1,45 @@
+<div>
+    <h3 class="center">{{pageContent.mainTitle}}</h3>
+    <div class="row" ng-init="initialize()">
+        <div class="col m4 s1" id="selection">
+            <h4 class="center">{{pageContent.questTitle}}</h4>
+            <p ng-repeat="atom in atoms">
+                <input name="atoms" type="radio" id="{{atom.identifier}}" value="{{atom.value}}">
+                <label for="{{atom.identifier}}">{{atom.value}}</label>
+            </p>
+            <a class="btn waves-effect waves-light" ng-click="initSearch()">Iniciar</a>
+        </div>
+        <div class="col m4 s1">
+            <h4>Preguntas del sistema</h4>
+            <div class="card blue-grey darken-1" ng-repeat="rules in askAtoms" ng-show="$last">
+                <div class="card-content white-text center">
+                    <span class="card-title">{{rules.value}}?</span>
+                </div>
+                <div class="card-action center">
+                    <a href="#/findBack" ng-click="getValues($index, 1);">Si</a>
+                    <a href="#/findBack" ng-click="getValues($index, 0);">No</a>
+                </div>
+            </div>
+        </div>
+        <div class="col m4 s1">
+            <h4>Tabla de deducciones</h4>
+            <table>
+                <thead>
+                <tr>
+                    <th>Atomo</th>
+                    <th>Valor</th>
+                    <th>Fuente</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr ng-repeat="value in resultTable" ng-show="$first">
+                    <td ng-class="getClassAtoms(value.type);">{{value.atom.value}}</td>
+                    <td>{{value.value}}</td>
+                    <td><a href="#/findFo" ng-click="createExp($index)">{{value.src}}</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

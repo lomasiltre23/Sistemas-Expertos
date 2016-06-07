@@ -1,0 +1,74 @@
+<div>
+    <h3 class="center">{{pageContent.pageTitle}}</h3>
+    <div class="row" ng-init="initialize();">
+
+        <div class="col s6 m6">
+            <div class="card blue-grey darken-1" ng-repeat="atoms in questions">
+                <div class="card-content white-text center">
+                    <span class="card-title">{{atoms.value}}?</span>
+                </div>
+                <div class="card-action center">
+                    <a href="#/findFo" ng-click="getValues($index, 1);">Si</a>
+                    <a href="#/findFo" ng-click="getValues($index, 0);">No</a>
+                </div>
+            </div>
+        </div>
+
+        <table class="col s6 m6">
+            <thead>
+            <tr>
+                <th>Atomo</th>
+                <th>Valor</th>
+                <th>Fuente</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr ng-repeat="value in valuesTable">
+                <td ng-class="getClassAtoms(value.type);">{{value.atom.value}}</td>
+                <td>{{value.value}}</td>
+                <td><a href="#/findFo" ng-click="createExp($index)">{{value.src}}</a></td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+<style>
+    .card{
+        position: relative;
+    }
+
+    .card.ng-leave{
+        -webkit-transition: 0.5s linear all;
+        -moz-transition: 0.5s linear all;
+        -ms-transition: 0.5s linear all;
+        -o-transition: 0.5s linear all;
+        transition: 0.5s linear all;
+        bottom: 0px;
+        opacity: 1;
+    }
+    .card.ng-leave-active{
+        -webkit-transition: 0.5s linear all;
+        -moz-transition: 0.5s linear all;
+        -ms-transition: 0.5s linear all;
+        -o-transition: 0.5s linear all;
+        transition: 0.5s linear all;
+        bottom: 1300px;
+        opacity: 0;
+    }
+
+    .A{
+        background-color: #ba7100;
+    }
+
+    .CI{
+        background-color: #0462ba;
+    }
+
+    .C{
+        /*color: #00ba74;*/
+        background-color: #00ba74;;
+    }
+</style>

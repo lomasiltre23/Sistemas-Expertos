@@ -1,0 +1,30 @@
+<div>
+    <h3 align="center">{{dictionaryContent.pageTitle}}</h3>
+    <div class="row">
+        <div id="leftColumn" class="col s6">
+            <h4 align="center">{{dictionaryContent.leftTitle}}</h4><br>
+            <form>
+                <div class="input-field">
+                    <input type="text" id="identifier" class="validate" required ng-model="identifier">
+                    <label for="identifier">{{dictionaryContent.identifierLabel}}</label>
+                </div>
+                <div class="input-field">
+                    <input type="text" id="value" class="validate" required ng-model="value">
+                    <label for="value">{{dictionaryContent.valueLabel}}</label>
+                </div>
+                <button class="btn waves-effect waves-light right" ng-click="addPreposition();">
+                    <i class="material-icons right">send</i>
+                    {{dictionaryContent.submitButton}}
+                </button>
+            </form>
+        </div>
+        <div class="col s6" ng-init="initialize();">
+            <h4 align="center">{{dictionaryContent.rightTitle}}</h4><br>
+            <ul class="collection">
+                <li ng-repeat="preps in dictionary track by $index" class="collection-item">
+                    <div>{{preps.id}}. {{preps.identifier}} : {{preps.value}}<a href="#" class="secondary-content" ng-click="removeElement($index);"><i class="material-icons center">clear</i></a></div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

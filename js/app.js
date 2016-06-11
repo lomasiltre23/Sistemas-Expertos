@@ -962,6 +962,8 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     var signos = [];
     var raiz = null;
     var nodoActual = null;
+    s.tablaAtomos = [];
+    s.tablaNodos = [];
     s.validateExpression = function(){
         if(openBrakets() == closedBrakets() && s.txtExpression != "")
             return true;
@@ -980,7 +982,7 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             var charNum = getCharNum(str);
             if(charNum > chars.length)
                 atomoActual = str;
-            validateChar(charNum, i);
+            validateChar(charNum, i, null);
         }
 
         crearArbol();
@@ -1080,10 +1082,10 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         var newNodo = {};
         if(!re.test(nodo.simbolo)) {
             newNodo.name = "O(" + nodo.signo + ", " + nodo.simbolo + ")" + " H(" + nodo.hSigno + ", " + nodo.hSimbolo + ") SH("
-                + obtenerSignos(nodo).Izquierdo + ", " + obtenerSignos(nodo).Derecho + ") Tipo(" + nodo.tipo + ")";
+                + obtenerSignos(nodo).Izquierdo + ", " + obtenerSignos(nodo).Derecho + ") Tipo(" + nodo.tipo + ")" + nodo.id;
         }
         else{
-            newNodo.name = "O(" + nodo.signo + ", " + nodo.simbolo + ")" + " H(" + nodo.hSigno + ", " + nodo.hSimbolo + ")";
+            newNodo.name = "O(" + nodo.signo + ", " + nodo.simbolo + ")" + " H(" + nodo.hSigno + ", " + nodo.hSimbolo + ")" + nodo.id;
         }
         newNodo.children = [];
         if(nodo.hDerecho != null) {
@@ -1106,7 +1108,9 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         r.send(json);
         loadTree();
     }
-    function validateChar(charNum, iterator) {
+    var newNode = {};
+    var valHijos = [];
+    function validateChar(charNum, iterator, nAct) {
         switch (charNum)
         {
             case 0: // ¬
@@ -1140,6 +1144,7 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
                 nodoActual = nodoActual.padre;
                 break;
             case 3: // ->
+                if(nAct == null){
                 nodoActual = nodoActual.padre;
                 if(nodoActual.signo != null && nodoActual.simbolo != null)
                     nodoActual = nodoActual.padre;
@@ -1147,24 +1152,101 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
                 nodoActual.simbolo = "->";
                 nodoActual.hSigno = nodoActual.signo;
                 nodoActual.hSimbolo = "->";
+                }
+                else{
+                    // Si el nodo no existe en la tabla de nodos
+                    valHijos = convertToOr(nAct, nAct.hIzquierdo.id, nAct.hDerecho.id);
+                    if(!existInTableNodos(valHijos)){
+                        newNode = {}; // Nuevo obj Nodo
+                        newNode.id = s.tablaNodos.length + 1; // Se asigna su nuevo id
+                        nAct.id = valHijos[2] == -1 ? newNode.id * -1 : newNode.id; // Se agrega id al nodo con respectivo signo
+                        newNode.M = mayorYMenor(valHijos)[0]; // Se asigna el hijo mayor
+                        newNode.m = mayorYMenor(valHijos)[1]; // Se asigna el hijo menor
+                        newNode.value = nAct.simbolo; // Se asigna el simbolo del nodo
+                        s.tablaNodos.push(newNode); // Agregar a la tabla de nodos
+                    }
+                    else {
+                        for (var i = 0; i < s.tablaNodos.length; i++) {
+                            if (mayorYMenor(valHijos)[0] == s.tablaNodos[i].M && mayorYMenor(valHijos)[1] == s.tablaNodos[i].m) {
+                                nAct.id = nAct.signo == "-" ? s.tablaNodos[i].id * -1 : s.tablaNodos[i].id;
+                                break;
+                            }
+                        }
+                    }
+                    if(nAct.padre != null)
+                        if (nAct.padre.hIzquierdo != null && nAct.padre.hDerecho != null)
+                            validateChar(getCharNum(nAct.padre.simbolo), iterator, nAct.padre);
+                }
                 break;
             case 4: // v
-                nodoActual = nodoActual.padre;
-                if(nodoActual.signo != null && nodoActual.simbolo != null)
+                if(nAct == null) {
                     nodoActual = nodoActual.padre;
-                nodoActual.signo = signos.pop();
-                nodoActual.simbolo = "v";
-                nodoActual.hSigno = nodoActual.signo;
-                nodoActual.hSimbolo = "v";
+                    if (nodoActual.signo != null && nodoActual.simbolo != null)
+                        nodoActual = nodoActual.padre;
+                    nodoActual.signo = signos.pop();
+                    nodoActual.simbolo = "v";
+                    nodoActual.hSigno = nodoActual.signo;
+                    nodoActual.hSimbolo = "v";
+                }
+                else {
+                    // Si el nodo no existe en la tabla de nodos
+                    valHijos = convertToOr(nAct, nAct.hIzquierdo.id, nAct.hDerecho.id);
+                    if(!existInTableNodos(valHijos)){
+                        newNode = {}; // Nuevo obj Nodo
+                        newNode.id = s.tablaNodos.length + 1; // Se asigna su nuevo id
+                        nAct.id = valHijos[2] == -1 ? newNode.id * -1 : newNode.id; // Se agrega id al nodo con respectivo signo
+                        newNode.M = mayorYMenor(valHijos)[0]; // Se asigna el hijo mayor
+                        newNode.m = mayorYMenor(valHijos)[1]; // Se asigna el hijo menor
+                        newNode.value = nAct.simbolo; // Se asigna el simbolo del nodo
+                        s.tablaNodos.push(newNode); // Agregar a la tabla de nodos
+                    }
+                    else {
+                        for (var i = 0; i < s.tablaNodos.length; i++) {
+                            if (mayorYMenor(valHijos)[0] == s.tablaNodos[i].M && mayorYMenor(valHijos)[1] == s.tablaNodos[i].m) {
+                                nAct.id = nAct.signo == "-" ? s.tablaNodos[i].id * -1 : s.tablaNodos[i].id;
+                                break;
+                            }
+                        }
+                    }
+                    if(nAct.padre != null)
+                        if (nAct.padre.hIzquierdo != null && nAct.padre.hDerecho != null)
+                            validateChar(getCharNum(nAct.padre.simbolo), iterator, nAct.padre);
+                }
                 break;
             case 5: // ^
-                nodoActual = nodoActual.padre;
-                if(nodoActual.signo != null && nodoActual.simbolo != null)
+                if(nAct == null) {
                     nodoActual = nodoActual.padre;
-                nodoActual.signo = signos.pop();
-                nodoActual.simbolo = "^";
-                nodoActual.hSigno = nodoActual.signo;
-                nodoActual.hSimbolo = "^";
+                    if (nodoActual.signo != null && nodoActual.simbolo != null)
+                        nodoActual = nodoActual.padre;
+                    nodoActual.signo = signos.pop();
+                    nodoActual.simbolo = "^";
+                    nodoActual.hSigno = nodoActual.signo;
+                    nodoActual.hSimbolo = "^";
+                }
+                else{
+                    // Si el nodo no existe en la tabla de nodos
+                    valHijos = convertToOr(nAct, nAct.hIzquierdo.id, nAct.hDerecho.id);
+                    if(!existInTableNodos(valHijos)){
+                        newNode = {}; // Nuevo obj Nodo
+                        newNode.id = s.tablaNodos.length + 1; // Se asigna su nuevo id
+                        nAct.id = valHijos[2] == -1 ? newNode.id * -1 : newNode.id; // Se agrega id al nodo con respectivo signo
+                        newNode.M = mayorYMenor(valHijos)[0]; // Se asigna el hijo mayor
+                        newNode.m = mayorYMenor(valHijos)[1]; // Se asigna el hijo menor
+                        newNode.value = nAct.simbolo; // Se asigna el simbolo del nodo
+                        s.tablaNodos.push(newNode); // Agregar a la tabla de nodos
+                    }
+                    else {
+                        for (var i = 0; i < s.tablaNodos.length; i++) {
+                            if (mayorYMenor(valHijos)[0] == s.tablaNodos[i].M && mayorYMenor(valHijos)[1] == s.tablaNodos[i].m) {
+                                nAct.id = nAct.signo == "-" ? s.tablaNodos[i].id * -1 : s.tablaNodos[i].id;
+                                break;
+                            }
+                        }
+                    }
+                    if(nAct.padre != null)
+                        if (nAct.padre.hIzquierdo != null && nAct.padre.hDerecho != null)
+                            validateChar(getCharNum(nAct.padre.simbolo), iterator, nAct.padre);
+                }
                 break;
             case -1: // ERROR
                 alert("ERROR: validate char");
@@ -1183,8 +1265,96 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
                 nodoActual.simbolo = atomoActual;
                 nodoActual.hSigno = s.txtExpression.substr(iterator - 1, 1) != "¬" ? "+" : "-";
                 nodoActual.hSimbolo = atomoActual;
+                if(!isInTableAtomos(nodoActual.simbolo)) {
+                    // Si el atomo no existe en la tabla de atomos
+                    // Agregar a tabla de atomos
+                    var id = s.tablaAtomos.length == 0 ? 1 : s.tablaNodos.length + 1; // Crear id de tablaAtomos
+                    nodoActual.id = nodoActual.signo == "-" ? id * -1 : id; // Asignar id a nodo con signo correspondiente
+                    var value = nodoActual.simbolo; // Agregar el valor del atomo a la tabla de atomos
+                    var newAtom = {}; // Se crea un obj Atomo para la tabla atomos
+                    newAtom.id = id; // Se asigna id al obj Atomo
+                    newAtom.value = value;// Se asigna valor al obj Atomo
+                    s.tablaAtomos.push(newAtom); // Se agrega a la tabla el obj Atomo
+                    // Agregar a tabla de nodos
+                    newNode = {}; // Se crea obj Nodo
+                    newNode.id = id; // Se le asigna su respectivo id igual al de la tabla atomos
+                    newNode.m = 0; // Como es atomo el menor es 0
+                    newNode.M = id; // Como es atomo el mayor es el id del atomo
+                    newNode.value = value; // Se asigna valor al obj Nodo
+                    s.tablaNodos.push(newNode); // Se agrega a la tabla de Nodos
+                }
+                else // Si el atomo ya existe en la tabla de atomos
+                {
+                    for(var i = 0; i < s.tablaAtomos.length; i++){ // Recorrer tabla de atomos
+                        if(nodoActual.simbolo == s.tablaAtomos[i].value){ // Si el simbolo del atomo concuerda con el de la tabla
+                            nodoActual.id = nodoActual.signo == "-" ? s.tablaAtomos[i].id * -1 : s.tablaAtomos[i].id; // Se le asigna el id al nodo segun el signo
+                            break;
+                        }
+                    }
+                }
+                if(nodoActual.padre.hIzquierdo != null && nodoActual.padre.hDerecho != null){
+                    validateChar(getCharNum(nodoActual.padre.simbolo),iterator, nodoActual.padre);
+                }
                 break;
         }
+    }
+    function isInTableAtomos(nodo){
+        for(var i = 0; i < s.tablaAtomos.length; i++){
+            if(s.tablaAtomos[i].value == nodo)
+                return true;
+        }
+        return false;
+    }
+    function convertToOr(nodo, vIz, vDe){
+        var signo = null;
+        if(nodo.signo == "+") {
+            if(nodo.simbolo == "->") {// +(P->Q)
+                // = +(-PvQ)
+                vIz *= -1;
+                signo = 1;
+            }else if(nodo.simbolo == "^") {// +(P^Q)
+                // = -(-Pv-Q)
+                vIz *= -1;
+                vDe *= -1;
+                signo = -1;
+            }
+            else{ // +(PvQ)
+                //= +(PvQ)
+                signo = 1;
+            }
+        }else {
+            if(nodo.simbolo == "->") { // -(P->Q)
+                //= -(-PvQ)
+                vIz *= -1;
+                signo = -1;
+            }else if(nodo.simbolo == "^") { // -(P^Q)
+                //= +(-Pv-Q)
+                vIz *= -1;
+                vDe *= -1;
+                signo = 1;
+            }
+            else{ // -(PvQ)
+                // = -(PvQ)
+                signo = -1;
+            }
+
+
+        }
+        return [vIz, vDe, signo];
+    }
+    function existInTableNodos(values){
+        for(var i = 0; i < s.tablaNodos.length; i++){
+            if(s.tablaNodos[i].m == values[0] && s.tablaNodos[i].M == values[1])
+                return true;
+            if(s.tablaNodos[i].m == values[1] && s.tablaNodos[i].M == values[0])
+                return true;
+        }
+        return false;
+    }
+    function mayorYMenor(values){
+        if(values[0] > values[1])
+            return values;
+        return [values[1], values[0]]
     }
     function getCharNum(str) {
         for(var i = 0; i < chars.length; i++)
@@ -1209,12 +1379,3 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         return counter;
     }
 }]);
-// TODO: Agregar a la funcion de agregar reglas para agregar preposiciones y consecuentes negados.
-// TODO: Agregar al programa   v , ^ -> ^ para tener +15
-
-
-/*
-* (a v b)-> c ^ d
-* => a -> c ^ d -- [a -> c] & [a -> d]
-* => b -> c ^ d -- [b -> c] & [b -> d]
-* */

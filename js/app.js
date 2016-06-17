@@ -1049,6 +1049,7 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     function crearArbol(){
         var hTree = heredarSignos(raiz,obtenerSignos(raiz));
         var abTree = asignarAlfasBetas(hTree);
+        busquedaAlfaBeta();
         var objJson = saveNodo(abTree);
         saveTree(objJson);
     }
@@ -1377,5 +1378,71 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             if(s.txtExpression.substr(i,1) == ")")
                 counter++;
         return counter;
+    }
+    // Alfa Beta
+    var alfasIzquierda = [];
+    var alfasDerechas = [];
+    function busquedaAlfaBeta() {
+        getAlfas(raiz.hIzquierdo, 0);
+        getAlfas(raiz.hDerecho, 1);
+
+        var strIzquierdas = "";
+        var strDerechas = "";
+        angular.forEach(alfasIzquierda, function (value, key) {
+            strIzquierdas += value.nodo.id;
+            if(key < alfasIzquierda.length)
+                strIzquierdas += ","
+        });
+
+        angular.forEach(alfasDerechas, function (value, key) {
+            strDerechas += value.nodo.id;
+            if(key < alfasDerechas.length)
+                strDerechas += ","
+        });
+
+        console.log(strIzquierdas + " ### " + strDerechas);
+    }
+
+    function getAlfas(nodoInicio, lado){
+        var nElement = {};
+        var newNodo = {};
+        angular.copy(nodoInicio, newNodo);
+        if(newNodo.tipo == "Alfa" || re.test(newNodo.simbolo)){
+            nElement.marca = false;
+            nElement.nodo = newNodo;
+            if(lado == 0) {
+                if(!exist(alfasIzquierda, nElement))
+                    alfasIzquierda.push(nElement);
+            }
+            else{
+                if(!exist(alfasDerechas, nElement))
+                    alfasDerechas.push(nElement);
+            }
+            if(newNodo.hIzquierdo != null)
+                getAlfas(newNodo.hIzquierdo, lado);
+
+            if(newNodo.hDerecho != null)
+                getAlfas(newNodo.hDerecho, lado);
+
+        }else if(newNodo.tipo == "Beta"){
+            nElement.marca = true;
+            nElement.nodo = newNodo;
+            if(lado == 0) {
+                if(!exist(alfasIzquierda, nElement))
+                    alfasIzquierda.push(nElement);
+            }
+            else{
+                if(!exist(alfasDerechas, nElement))
+                    alfasDerechas.push(nElement);
+            }
+        }
+    }
+
+    function exist(array, element){
+        for(var i = 0; i < array.length; i++){
+            if(array[i].nodo.id == element.nodo.id)
+                return true;
+        }
+        return false;
     }
 }]);

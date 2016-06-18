@@ -1048,8 +1048,10 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     }
     function crearArbol(){
         var hTree = heredarSignos(raiz,obtenerSignos(raiz));
+        raiz.hId = raiz.id;
         var abTree = asignarAlfasBetas(hTree);
-        busquedaAlfaBeta();
+        iniciarBusquedaAlfaBeta();
+        //busquedaAlfaBeta();
         var objJson = saveNodo(abTree);
         saveTree(objJson);
     }
@@ -1058,19 +1060,27 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         var hD = {};
         var newNodo = nodo;
         if(nodo.hIzquierdo != null){
-            if(signoHeredado.Izquierdo == "+")
+            if(signoHeredado.Izquierdo == "+") {
                 nodo.hIzquierdo.hSigno = nodo.hIzquierdo.hSigno == "+" ? "+" : "-";
-            else
+                nodo.hIzquierdo.hId = nodo.hIzquierdo.id;
+            }
+            else {
                 nodo.hIzquierdo.hSigno = nodo.hIzquierdo.hSigno == "+" ? "-" : "+";
+                nodo.hIzquierdo.hId = (nodo.hIzquierdo.id * -1);
+            }
             hI = heredarSignos(nodo.hIzquierdo, obtenerSignos(nodo.hIzquierdo));
             newNodo.hIzquierdo = hI;
         }
 
         if(nodo.hDerecho != null){
-            if(signoHeredado.Derecho == "+")
+            if(signoHeredado.Derecho == "+") {
                 nodo.hDerecho.hSigno = nodo.hDerecho.hSigno == "+" ? "+" : "-";
-            else
+                nodo.hDerecho.hId = nodo.hDerecho.id;
+            }
+            else {
                 nodo.hDerecho.hSigno = nodo.hDerecho.hSigno == "+" ? "-" : "+";
+                nodo.hDerecho.hId = (nodo.hDerecho.id * -1);
+            }
             hD = heredarSignos(nodo.hDerecho, obtenerSignos(nodo.hDerecho));
             newNodo.hDerecho = hD;
         }
@@ -1083,10 +1093,12 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         var newNodo = {};
         if(!re.test(nodo.simbolo)) {
             newNodo.name = "O(" + nodo.signo + ", " + nodo.simbolo + ")" + " H(" + nodo.hSigno + ", " + nodo.hSimbolo + ") SH("
-                + obtenerSignos(nodo).Izquierdo + ", " + obtenerSignos(nodo).Derecho + ") Tipo(" + nodo.tipo + ")" + nodo.id;
+                + obtenerSignos(nodo).Izquierdo + ", " + obtenerSignos(nodo).Derecho + ") Tipo(" + nodo.tipo + ")"
+                + "(" + nodo.id + ", " + nodo.hId + ")";
         }
         else{
-            newNodo.name = "O(" + nodo.signo + ", " + nodo.simbolo + ")" + " H(" + nodo.hSigno + ", " + nodo.hSimbolo + ")" + nodo.id;
+            newNodo.name = "O(" + nodo.signo + ", " + nodo.simbolo + ")" + " H(" + nodo.hSigno + ", " + nodo.hSimbolo + ")"
+                + "(" + nodo.id + ", " + nodo.hId + ")";
         }
         newNodo.children = [];
         if(nodo.hDerecho != null) {
@@ -1380,29 +1392,110 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         return counter;
     }
     // Alfa Beta
+    var abiertos = [];
     var alfasIzquierda = [];
     var alfasDerechas = [];
-    function busquedaAlfaBeta() {
-        getAlfas(raiz.hIzquierdo, 0);
-        getAlfas(raiz.hDerecho, 1);
-
-        var strIzquierdas = "";
-        var strDerechas = "";
-        angular.forEach(alfasIzquierda, function (value, key) {
-            strIzquierdas += value.nodo.id;
-            if(key < alfasIzquierda.length)
-                strIzquierdas += ","
-        });
-
-        angular.forEach(alfasDerechas, function (value, key) {
-            strDerechas += value.nodo.id;
-            if(key < alfasDerechas.length)
-                strDerechas += ","
-        });
-
-        console.log(strIzquierdas + " ### " + strDerechas);
+    var betaIz = [];
+    var betaDe = [];
+    function iniciarBusquedaAlfaBeta() {
+        // Crear Lista Inicial
+        getAlfas(raiz, 2);
+        angular.copy(abiertos, alfasIzquierda);
+        angular.copy(abiertos, alfasDerechas);
+        busquedaAlfaBeta();
     }
+    
+    function busquedaAlfaBeta() {
+        console.log("ABIERTOS: " + imprimirLista(abiertos));
+        var beta = {};
+        for(var i = 0; i < abiertos.length; i++){
+            if(abiertos[i].marca){
+                angular.copy(abiertos[i].nodo, beta);
+                // Desplegar Beta Izquierda
+                getAlfas(beta.hIzquierdo, 0);
+                // Desplegar Beta Derecha
+                getAlfas(beta.hDerecho, 1);
+                abiertos[i].marca = false;
+                break;
+            }
+        }
 
+        for(var i = 0; i < alfasIzquierda.length; i++){
+            if(alfasIzquierda[i].nodo.id == beta.id)
+                alfasIzquierda[i].marca = false
+        }
+        for(var i = 0; i < alfasDerechas.length; i++){
+            if(alfasDerechas[i].nodo.id == beta.id)
+                alfasDerechas[i].marca = false
+        }
+        console.log("IZ: " + imprimirLista(alfasIzquierda) + " -> " + imprimirLista(betaIz));
+        console.log("DE: " + imprimirLista(alfasDerechas) + " -> " + imprimirLista(betaDe));
+        // Verificar si existe el ID o si Existe el ID contrario Izquierdas
+        for(var i = 0; i < betaIz.length; i++){
+            if(existContrario(alfasIzquierda, betaIz[i])){
+                alfasIzquierda = [];
+                break;
+            }else if(!exist(alfasIzquierda, betaIz[i])){
+                alfasIzquierda.push(betaIz[i])
+            }
+        }
+
+        // Verificar si existe el ID o si Existe el ID contrario derechas
+        for(var i = 0; i < betaDe.length; i++){
+            // Si existe id con signo contrario eliminar rama
+            if(existContrario(alfasDerechas, betaDe[i])){
+                alfasDerechas = [];
+                break;
+            }else if(!exist(alfasDerechas, betaDe[i])){
+                alfasDerechas.push(betaDe[i])
+            }
+        }
+        betaIz = [];
+        betaDe = [];
+        // Verificar si es SAT
+        if(isSAT()){
+            alert("SATISFACIBLE");
+        }else if(isINSAT()){
+            alert("INSATISFACIBLE");
+        }else{
+            angular.copy(heuristica(), abiertos);
+            busquedaAlfaBeta();
+        }
+    }
+    function heuristica(){
+        var countLeft = alfasIzquierda.length + contarBetas(alfasIzquierda);
+        var countRight = alfasDerechas.length + contarBetas(alfasDerechas);
+
+        if(countLeft > countRight)
+            return alfasIzquierda;
+        return alfasDerechas;
+    }
+    function isSAT(){
+        if(alfasIzquierda.length > 0 || alfasDerechas.length > 0)
+            if(cerradoSinBetas(alfasIzquierda) || cerradoSinBetas(alfasDerechas))
+                return true;
+        return false;
+    }
+    function cerradoSinBetas(rama) {
+        if(rama.length > 0 && contarBetas(alfasIzquierda) == 0)
+            return true;
+        return false;
+    }
+    function isINSAT() {
+        if(abiertos.length == 0 && alfasIzquierda.length == 0 && alfasDerechas.length == 0)
+            return true;
+        return false;
+    }
+    function contarBetas(lista){
+        var count = 0;
+        for(var i = 0; i < lista.length; i++){
+            if(lista[i].marca){
+                count++;
+            }
+        }
+
+        return count;
+    }
     function getAlfas(nodoInicio, lado){
         var nElement = {};
         var newNodo = {};
@@ -1411,12 +1504,16 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             nElement.marca = false;
             nElement.nodo = newNodo;
             if(lado == 0) {
-                if(!exist(alfasIzquierda, nElement))
-                    alfasIzquierda.push(nElement);
+                if(!exist(betaIz, nElement))
+                    betaIz.push(nElement);
+            }
+            else if(lado == 1){
+                if(!exist(betaDe, nElement))
+                    betaDe.push(nElement);
             }
             else{
-                if(!exist(alfasDerechas, nElement))
-                    alfasDerechas.push(nElement);
+                if(!exist(abiertos, nElement))
+                    abiertos.push(nElement);
             }
             if(newNodo.hIzquierdo != null)
                 getAlfas(newNodo.hIzquierdo, lado);
@@ -1428,21 +1525,38 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             nElement.marca = true;
             nElement.nodo = newNodo;
             if(lado == 0) {
-                if(!exist(alfasIzquierda, nElement))
-                    alfasIzquierda.push(nElement);
+                if(!exist(betaIz, nElement))
+                    betaIz.push(nElement);
+            }
+            else if(lado == 1){
+                if(!exist(betaDe, nElement))
+                    betaDe.push(nElement);
             }
             else{
-                if(!exist(alfasDerechas, nElement))
-                    alfasDerechas.push(nElement);
+                if(!exist(abiertos, nElement))
+                    abiertos.push(nElement);
             }
         }
     }
-
     function exist(array, element){
         for(var i = 0; i < array.length; i++){
-            if(array[i].nodo.id == element.nodo.id)
+            if(array[i].nodo.hId == element.nodo.hId)
                 return true;
         }
         return false;
+    }
+    function existContrario(array, element){
+        for(var i = 0; i < array.length; i++){
+            if((array[i].nodo.hId*-1) == element.nodo.hId)
+                return true;
+        }
+        return false;
+    }
+    function imprimirLista(lista){
+        var strList = "";
+        angular.forEach(lista, function (value, key) {
+            strList += value.nodo.hId + ", ";
+        });
+        return strList;
     }
 }]);

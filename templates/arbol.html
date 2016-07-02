@@ -17,9 +17,9 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="atomo in tablaAtomos">
-                    <td>{{atomo.id}}</td>
-                    <td>{{atomo.value}}</td>
+                <tr ng-repeat="atom in atoms_table">
+                    <td>{{atom.id}}</td>
+                    <td>{{atom.value.node_symbol}}</td>
                 </tr>
             </tbody>
         </table>
@@ -35,11 +35,11 @@
                 </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="nodo in tablaNodos">
-                <td>{{nodo.id}}</td>
-                <td>{{nodo.m}}</td>
-                <td>{{nodo.M}}</td>
-                <td>{{nodo.value}}</td>
+            <tr ng-repeat="node in node_table">
+                <td>{{node.id}}</td>
+                <td>{{node.menor}}</td>
+                <td>{{node.mayor}}</td>
+                <td>{{node.value.node_symbol}}</td>
             </tr>
             </tbody>
         </table>

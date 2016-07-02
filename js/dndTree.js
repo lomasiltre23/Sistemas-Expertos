@@ -28,6 +28,7 @@
 
 // Get JSON data
 function loadTree() {
+    $('#tree-container').empty();
     var treeJSON = d3.json("../json/flare.json", function (error, treeData) {
         // Calculate total nodes, max label length
         var totalNodes = 0;

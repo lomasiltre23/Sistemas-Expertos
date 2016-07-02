@@ -940,6 +940,160 @@ app.controller("FindBack",["$scope","$http", function (s, http) {
 }]);
 
 app.controller("AlfaBeta",["$scope","$http", function (s, http) {
+    s.txtExpression = "";
+    s.atoms_table = [];
+    s.node_table = [];
+    var current_node_id;
+    var re = /[A-Z][A-Za-z]*/;
+    var current_node;
+    var root_node;
+    function initVars() {
+        current_node = null;
+        root_node = null;
+        current_node_id = 0;
+        s.atoms_table = [];
+        s.node_table = [];
+    }
+    s.validateExpression = function(){return openBrakets() == closedBrakets() && s.txtExpression != "";};
+    function openBrakets(){
+        var counter = 0;
+        for(var i = 0; i < s.txtExpression.length; i++)
+            if(s.txtExpression.substr(i,1) == "(")
+                counter++;
+        return counter;
+    }
+    function closedBrakets(){
+        var counter = 0;
+        for(var i = 0; i < s.txtExpression.length; i++)
+            if(s.txtExpression.substr(i,1) == ")")
+                counter++;
+        return counter;
+    }
+    s.readExpression = function () {
+        initVars();
+        for(var i = 0; i < s.txtExpression.length; i++){
+            var prevchar = i == 0 ? null : s.txtExpression.substr(i-1, 1);
+            var char = s.txtExpression.substr(i, 1);
+            if(char == "-"){ i++; char += s.txtExpression.substr(i, 1);}
+            if(char != "¬") validateChar(char, prevchar);
+        }
+        saveTree(root_node.json());
+    };
+    // Creacion  de Arbol
+    function validateChar(char, prevchar) {
+        var str = re.test(char) ? "Atom" : char;
+        switch (str) {
+            case "(":
+                openBraket(prevchar);
+                break;
+            case ")":
+                closeBraket();
+                break;
+            case "->":
+            case "^":
+            case "v":
+                operator(str);
+                break;
+            case "Atom":
+                variable(prevchar, char);
+                break;
+        }
+    }
+    function getNodeId() {
+        for (var i = 0; i < s.node_table.length; i++) {
+            var obj = s.node_table[i];
+            if(obj.value.node_symbol == current_node.node_symbol)
+                return obj.id;
+        }
+
+        return null;
+    }
+    function addCurrentToAtoms() {
+        var newAtom = {};
+        newAtom.value = current_node;
+        newAtom.id = s.atoms_table.length == 0 ? 1 : s.atoms_table[s.atoms_table.length - 1].id + 1;
+        s.atoms_table.pushIfNotExist(newAtom, function (e) {
+            return newAtom.value.node_symbol == e.value.node_symbol;
+        });
+        addCurrentToNodes(true);
+    }
+    function addCurrentToNodes(isAtom) {
+        var newAtom = {};
+        newAtom.value = current_node;
+        newAtom.id = s.node_table.length == 0 ? 1 : s.node_table[s.node_table.length - 1].id + 1;
+        newAtom.mayor = isAtom ? newAtom.id : isAtom;// TODO crear funcion que convierta a ors
+        newAtom.menor = isAtom ? 0 : isAtom;// TODO crear funcion que convierta a ors
+        var agregado = s.node_table.pushIfNotExist(newAtom, function (e) {
+            if(!isAtom)
+                return newAtom.mayor == e.mayor && newAtom.menor == e.menor;
+            else
+                return newAtom.value.node_symbol == e.value.node_symbol;
+        });
+        current_node.node_id = agregado ? newAtom.id : getNodeId();
+        
+    }
+    function openBraket(prevChar) {
+        // Si no existe nodo raiz
+        if(root_node == null) {
+            // Crear nodo raiz
+            root_node = new Node();
+            root_node.node_identifier = ++current_node_id;
+            // Cambiar nodo actual a nodo raiz
+            current_node = root_node;
+        }
+        else {
+            /*
+            * Asignar hijo izquierdo o derecho #Ver declaracion#
+            * Retorna el hijo asignado al nodo actual
+            */
+            current_node = current_node.setChild();
+            current_node.node_identifier = ++current_node_id;
+        }
+        current_node.setSign(prevChar);
+    }
+    function closeBraket() {
+        //addCurrentToNodes();
+        current_node = current_node.father;
+    }
+    function operator(symbol) {
+        current_node.node_symbol = symbol;
+        current_node.setType();
+    }
+
+    function variable(prevchar, atom) {
+        current_node = current_node.setChild();
+        current_node.node_identifier = ++current_node_id;
+        current_node.setSign(prevchar);
+        current_node.node_symbol = atom;
+        addCurrentToAtoms();
+        //addCurrentToNodes(true);
+        current_node = current_node.father;
+    }
+    function saveTree(tree){
+        var jsonData = JSON.stringify(tree);
+        console.log(jsonData);
+        var r = new XMLHttpRequest();
+        r.open("POST", "/saveTree", true);
+        r.getAllResponseHeaders();
+        r.setRequestHeader("Content-type","application/json;charset=UTF-8");
+        r.send(jsonData);
+        setTimeout(loadTree, 500);
+    }
+    /*
+    function crearArbol(){
+        var hTree = heredarSignos(raiz,obtenerSignos(raiz));
+        raiz.hId = raiz.id;
+        var abTree = asignarAlfasBetas(hTree);
+        iniciarBusquedaAlfaBeta();
+        //busquedaAlfaBeta();
+        var objJson = saveNodo(abTree);
+        saveTree(objJson);
+    }
+    */
+
+}]);
+
+app.controller("AlfaBeta1",["$scope","$http", function (s, http) {
     var chars = ["¬","(", ")", "->", "v", "^"];
     var re = /[A-Z][A-Za-z]*/;
     var atomoActual = "";
@@ -964,6 +1118,13 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     var nodoActual = null;
     s.tablaAtomos = [];
     s.tablaNodos = [];
+    var abiertos = {listaInicio:[], listaIzquierda: [], listaDerecha: []};
+    var alfasIzquierda = [];
+    var alfasDerechas = [];
+    var betaIz = [];
+    var betaDe = [];
+    var newNode = {};
+    var valHijos = [];
     s.validateExpression = function(){
         if(openBrakets() == closedBrakets() && s.txtExpression != "")
             return true;
@@ -971,8 +1132,20 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     };
     s.readExpression = function (){
         //loadTree();
-        for(var i = 0; i < s.txtExpression.length; i++)
-        {
+        atomoActual = "";
+        signos = [];
+        raiz = null;
+        nodoActual = null;
+        s.tablaAtomos = [];
+        s.tablaNodos = [];
+        abiertos = {listaInicio:[], listaIzquierda: [], listaDerecha: []};
+        alfasIzquierda = [];
+        alfasDerechas = [];
+        betaIz = [];
+        betaDe = [];
+        newNode = {};
+        valHijos = [];
+        for(var i = 0; i < s.txtExpression.length; i++) {
             var str = s.txtExpression.substr(i,1);
 
             if (str == "-") {
@@ -1121,8 +1294,6 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         r.send(json);
         loadTree();
     }
-    var newNode = {};
-    var valHijos = [];
     function validateChar(charNum, iterator, nAct) {
         switch (charNum)
         {
@@ -1392,75 +1563,77 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         return counter;
     }
     // Alfa Beta
-    var abiertos = [];
-    var alfasIzquierda = [];
-    var alfasDerechas = [];
-    var betaIz = [];
-    var betaDe = [];
     function iniciarBusquedaAlfaBeta() {
         // Crear Lista Inicial
-        getAlfas(raiz, 2);
-        angular.copy(abiertos, alfasIzquierda);
-        angular.copy(abiertos, alfasDerechas);
+        getAlfas(raiz, 0);
+        angular.copy(abiertos.listaInicio, abiertos.listaIzquierda);
+        angular.copy(abiertos.listaInicio, abiertos.listaDerecha);
         busquedaAlfaBeta();
     }
-    
     function busquedaAlfaBeta() {
-        console.log("ABIERTOS: " + imprimirLista(abiertos));
-        var beta = {};
-        for(var i = 0; i < abiertos.length; i++){
-            if(abiertos[i].marca){
-                angular.copy(abiertos[i].nodo, beta);
-                // Desplegar Beta Izquierda
-                getAlfas(beta.hIzquierdo, 0);
-                // Desplegar Beta Derecha
-                getAlfas(beta.hDerecho, 1);
-                abiertos[i].marca = false;
-                break;
-            }
-        }
-
-        for(var i = 0; i < alfasIzquierda.length; i++){
-            if(alfasIzquierda[i].nodo.id == beta.id)
-                alfasIzquierda[i].marca = false
-        }
-        for(var i = 0; i < alfasDerechas.length; i++){
-            if(alfasDerechas[i].nodo.id == beta.id)
-                alfasDerechas[i].marca = false
-        }
-        console.log("IZ: " + imprimirLista(alfasIzquierda) + " -> " + imprimirLista(betaIz));
-        console.log("DE: " + imprimirLista(alfasDerechas) + " -> " + imprimirLista(betaDe));
-        // Verificar si existe el ID o si Existe el ID contrario Izquierdas
-        for(var i = 0; i < betaIz.length; i++){
-            if(existContrario(alfasIzquierda, betaIz[i])){
-                alfasIzquierda = [];
-                break;
-            }else if(!exist(alfasIzquierda, betaIz[i])){
-                alfasIzquierda.push(betaIz[i])
-            }
-        }
-
-        // Verificar si existe el ID o si Existe el ID contrario derechas
-        for(var i = 0; i < betaDe.length; i++){
-            // Si existe id con signo contrario eliminar rama
-            if(existContrario(alfasDerechas, betaDe[i])){
-                alfasDerechas = [];
-                break;
-            }else if(!exist(alfasDerechas, betaDe[i])){
-                alfasDerechas.push(betaDe[i])
-            }
-        }
-        betaIz = [];
-        betaDe = [];
-        // Verificar si es SAT
-        if(isSAT()){
-            alert("SATISFACIBLE");
-        }else if(isINSAT()){
-            alert("INSATISFACIBLE");
-        }else{
-            angular.copy(heuristica(), abiertos);
-            busquedaAlfaBeta();
-        }
+        // console.log("ABIERTOS: " + imprimirLista(abiertos));
+        // var beta = {};
+        // for(var i = 0; i < abiertos.length; i++){
+        //     if(abiertos[i].marca){
+        //         angular.copy(abiertos[i].nodo, beta);
+        //         // Desplegar Beta Izquierda
+        //         getAlfas(beta.hIzquierdo, 0);
+        //         // Desplegar Beta Derecha
+        //         getAlfas(beta.hDerecho, 1);
+        //         abiertos[i].marca = false;
+        //         break;
+        //     }
+        // }
+        //
+        // for(var i = 0; i < alfasIzquierda.length; i++){
+        //     if(alfasIzquierda[i].nodo.id == beta.id)
+        //         alfasIzquierda[i].marca = false
+        // }
+        // for(var i = 0; i < alfasDerechas.length; i++){
+        //     if(alfasDerechas[i].nodo.id == beta.id)
+        //         alfasDerechas[i].marca = false
+        // }
+        // console.log("IZ: " + imprimirLista(alfasIzquierda) + " -> " + imprimirLista(betaIz));
+        // console.log("DE: " + imprimirLista(alfasDerechas) + " -> " + imprimirLista(betaDe));
+        // // Verificar si existe el ID o si Existe el ID contrario Izquierdas
+        // for(var i = 0; i < betaIz.length; i++){
+        //     if(existContrario(alfasIzquierda, betaIz[i])){
+        //         alfasIzquierda = [];
+        //         break;
+        //     }else if(!exist(alfasIzquierda, betaIz[i])){
+        //         alfasIzquierda.push(betaIz[i])
+        //     }
+        // }
+        //
+        // // Verificar si existe el ID o si Existe el ID contrario derechas
+        // for(var i = 0; i < betaDe.length; i++){
+        //     // Si existe id con signo contrario eliminar rama
+        //     if(existContrario(alfasDerechas, betaDe[i])){
+        //         alfasDerechas = [];
+        //         break;
+        //     }else if(!exist(alfasDerechas, betaDe[i])){
+        //         alfasDerechas.push(betaDe[i])
+        //     }
+        // }
+        // betaIz = [];
+        // betaDe = [];
+        // if(isINSAT()){
+        //     alert("INSATISFACIBLE");
+        // }else if(isSAT()){
+        //     alert("SATISFACIBLE");
+        // }else{
+        //     angular.copy(heuristica(), abiertos);
+        //     busquedaAlfaBeta();
+        // }
+        // // Verificar si es SAT
+        // if(isSAT()){
+        //     alert("SATISFACIBLE");
+        // }else if(isINSAT()){
+        //     alert("INSATISFACIBLE");
+        // }else{
+        //     angular.copy(heuristica(), abiertos);
+        //     busquedaAlfaBeta();
+        // }
     }
     function heuristica(){
         var countLeft = alfasIzquierda.length + contarBetas(alfasIzquierda);
@@ -1500,43 +1673,84 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         var nElement = {};
         var newNodo = {};
         angular.copy(nodoInicio, newNodo);
+
         if(newNodo.tipo == "Alfa" || re.test(newNodo.simbolo)){
             nElement.marca = false;
             nElement.nodo = newNodo;
             if(lado == 0) {
-                if(!exist(betaIz, nElement))
+                if (!exist(abiertos.listaInicio, nElement))
+                    abiertos.listaInicio.push(nElement);
+            }
+            if(lado == 1){
+                if (!exist(betaIz, nElement))
                     betaIz.push(nElement);
             }
-            else if(lado == 1){
+            if(lado == 2){
                 if(!exist(betaDe, nElement))
                     betaDe.push(nElement);
             }
-            else{
-                if(!exist(abiertos, nElement))
-                    abiertos.push(nElement);
-            }
+
             if(newNodo.hIzquierdo != null)
                 getAlfas(newNodo.hIzquierdo, lado);
-
             if(newNodo.hDerecho != null)
                 getAlfas(newNodo.hDerecho, lado);
-
-        }else if(newNodo.tipo == "Beta"){
+        }
+        if(newNodo.tipo == "Beta"){
             nElement.marca = true;
             nElement.nodo = newNodo;
             if(lado == 0) {
-                if(!exist(betaIz, nElement))
+                if (!exist(abiertos.listaInicio, nElement))
+                    abiertos.listaInicio.push(nElement);
+            }
+            if(lado == 1){
+                if (!exist(betaIz, nElement))
                     betaIz.push(nElement);
             }
-            else if(lado == 1){
+            if(lado == 2){
                 if(!exist(betaDe, nElement))
                     betaDe.push(nElement);
             }
-            else{
-                if(!exist(abiertos, nElement))
-                    abiertos.push(nElement);
-            }
         }
+        // var nElement = {};
+        // var newNodo = {};
+        // angular.copy(nodoInicio, newNodo);
+        // if(newNodo.tipo == "Alfa" || re.test(newNodo.simbolo)){
+        //     nElement.marca = false;
+        //     nElement.nodo = newNodo;
+        //     if(lado == 0) {
+        //         if(!exist(betaIz, nElement))
+        //             betaIz.push(nElement);
+        //     }
+        //     else if(lado == 1){
+        //         if(!exist(betaDe, nElement))
+        //             betaDe.push(nElement);
+        //     }
+        //     else{
+        //         if(!exist(abiertos, nElement))
+        //             abiertos.push(nElement);
+        //     }
+        //     if(newNodo.hIzquierdo != null)
+        //         getAlfas(newNodo.hIzquierdo, lado);
+        //
+        //     if(newNodo.hDerecho != null)
+        //         getAlfas(newNodo.hDerecho, lado);
+        //
+        // }else if(newNodo.tipo == "Beta"){
+        //     nElement.marca = true;
+        //     nElement.nodo = newNodo;
+        //     if(lado == 0) {
+        //         if(!exist(betaIz, nElement))
+        //             betaIz.push(nElement);
+        //     }
+        //     else if(lado == 1){
+        //         if(!exist(betaDe, nElement))
+        //             betaDe.push(nElement);
+        //     }
+        //     else{
+        //         if(!exist(abiertos, nElement))
+        //             abiertos.push(nElement);
+        //     }
+        // }
     }
     function exist(array, element){
         for(var i = 0; i < array.length; i++){

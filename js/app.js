@@ -940,6 +940,8 @@ app.controller("FindBack",["$scope","$http", function (s, http) {
 }]);
 
 app.controller("AlfaBeta",["$scope","$http", function (s, http) {
+
+    // Variable Globales
     s.txtExpression = "";
     s.atoms_table = [];
     s.node_table = [];
@@ -947,13 +949,18 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     var re = /[A-Z][A-Za-z]*/;
     var current_node;
     var root_node;
+    var possible_node_id = null;
     function initVars() {
         current_node = null;
         root_node = null;
         current_node_id = 0;
         s.atoms_table = [];
         s.node_table = [];
+        possible_node_id = null;
     }
+    // END Variables globales
+
+    // Validacion FRONT-END expresion
     s.validateExpression = function(){return openBrakets() == closedBrakets() && s.txtExpression != "";};
     function openBrakets(){
         var counter = 0;
@@ -969,6 +976,9 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
                 counter++;
         return counter;
     }
+    // END Validacion FRONT-END
+
+    // Lectura de expresion
     s.readExpression = function () {
         initVars();
         for(var i = 0; i < s.txtExpression.length; i++){
@@ -977,8 +987,10 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             if(char == "-"){ i++; char += s.txtExpression.substr(i, 1);}
             if(char != "¬") validateChar(char, prevchar);
         }
+        inheritSigns(root_node);
         saveTree(root_node.json());
     };
+
     // Creacion  de Arbol
     function validateChar(char, prevchar) {
         var str = re.test(char) ? "Atom" : char;
@@ -999,14 +1011,58 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
                 break;
         }
     }
-    function getNodeId() {
-        for (var i = 0; i < s.node_table.length; i++) {
-            var obj = s.node_table[i];
-            if(obj.value.node_symbol == current_node.node_symbol)
-                return obj.id;
+
+    // Creacion de ID primera corrida y tabla!!
+    function getNodeId(isAtom, mayor, menor) {
+        if(isAtom) {
+            for (var i = 0; i < s.node_table.length; i++) {
+                var obj = s.node_table[i];
+                if (obj.value.node_symbol == current_node.node_symbol)
+                    return obj.id;
+            }
+        }else{
+            for (var i = 0; i < s.node_table.length; i++) {
+                var obj = s.node_table[i];
+                if (obj.mayor == mayor && obj.menor == menor)
+                    return obj.id;
+            }
         }
 
         return null;
+    }
+    function getOrSigns(getMayor, node_id) {
+        var signs_conbination = current_node.original_sign + current_node.node_symbol;
+        var signo = current_node.original_sign == "-" ? -1 : 1;
+        var id = node_id * signo;
+        var left_id = current_node.left_child.original_id;
+        var right_id = current_node.right_child.original_id;
+        switch(signs_conbination){
+            case "+->":// return +(-,+)
+                left_id *= -1;
+                break;
+            case "-->":// return -(-,+)
+                id *= -1;
+                left_id *= -1;
+                break;
+            case "+^"://  return -(-,-)
+                id *= -1;
+                left_id *= -1;
+                right_id *= -1;
+                break;
+            case "-^"://  return +(-,-)
+                left_id *= -1;
+                right_id *= -1;
+                break;
+            default:  //  (-,v) y (+,v)
+                break;
+        }
+        var mayor = left_id > right_id ? left_id : right_id;
+        var menor = left_id < right_id ? left_id : right_id;
+
+        if(getMayor == null) return id;
+        if(getMayor) return mayor;
+        return menor;
+
     }
     function addCurrentToAtoms() {
         var newAtom = {};
@@ -1019,19 +1075,30 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     }
     function addCurrentToNodes(isAtom) {
         var newAtom = {};
+        var signo = current_node.original_sign == "-" ? -1 : 1;
         newAtom.value = current_node;
         newAtom.id = s.node_table.length == 0 ? 1 : s.node_table[s.node_table.length - 1].id + 1;
-        newAtom.mayor = isAtom ? newAtom.id : isAtom;// TODO crear funcion que convierta a ors
-        newAtom.menor = isAtom ? 0 : isAtom;// TODO crear funcion que convierta a ors
+        newAtom.mayor = isAtom ? newAtom.id : getOrSigns(true, newAtom.id);
+        newAtom.menor = isAtom ? 0 : getOrSigns(false, newAtom.id);
         var agregado = s.node_table.pushIfNotExist(newAtom, function (e) {
             if(!isAtom)
                 return newAtom.mayor == e.mayor && newAtom.menor == e.menor;
             else
                 return newAtom.value.node_symbol == e.value.node_symbol;
         });
-        current_node.node_id = agregado ? newAtom.id : getNodeId();
-        
+
+        if(agregado){
+            current_node.original_id = isAtom ? newAtom.id * signo : getOrSigns(null, newAtom.id);
+        }else{
+            if(isAtom)
+                current_node.original_id = getNodeId(true, newAtom.mayor, newAtom.menor) * signo;
+            else
+                current_node.original_id = getNodeId(false, newAtom.mayor, newAtom.menor) * signo;
+        }
     }
+    // END Creacion de ID
+
+    // Lector de Expreciones
     function openBraket(prevChar) {
         // Si no existe nodo raiz
         if(root_node == null) {
@@ -1052,23 +1119,44 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         current_node.setSign(prevChar);
     }
     function closeBraket() {
-        //addCurrentToNodes();
+        addCurrentToNodes(false);
         current_node = current_node.father;
     }
     function operator(symbol) {
         current_node.node_symbol = symbol;
         current_node.setType();
     }
-
     function variable(prevchar, atom) {
         current_node = current_node.setChild();
         current_node.node_identifier = ++current_node_id;
         current_node.setSign(prevchar);
         current_node.node_symbol = atom;
         addCurrentToAtoms();
-        //addCurrentToNodes(true);
         current_node = current_node.father;
     }
+    // END Lector expreciones
+
+    // Heredar Signos
+    function inheritSigns(nodo){
+        nodo.getInheritSigns();
+        if(nodo.left_child != null){
+            var nodeLeftSign = nodo.left_child.original_sign == "+" ? 1 : -1;
+            nodo.left_child.inherit_sign = (nodeLeftSign * nodo.inherit_signs.left) > 0 ? "+" : "-";
+            nodo.left_child.inherit_id = nodo.left_child.original_id * nodo.inherit_signs.left;
+            inheritSigns(nodo.left_child);
+        }
+
+        if(nodo.right_child != null){
+            var nodeRightSign = nodo.right_child.original_sign == "+" ? 1 : -1;
+            nodo.right_child.inherit_sign = (nodeRightSign * nodo.inherit_signs.right) > 0 ? "+" : "-";
+            nodo.right_child.inherit_id = nodo.right_child.original_id * nodo.inherit_signs.right;
+            inheritSigns(nodo.right_child);
+        }
+
+    }
+    //END Heredar Signos
+
+    //END Creacion Arbol
     function saveTree(tree){
         var jsonData = JSON.stringify(tree);
         console.log(jsonData);
@@ -1079,17 +1167,6 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         r.send(jsonData);
         setTimeout(loadTree, 500);
     }
-    /*
-    function crearArbol(){
-        var hTree = heredarSignos(raiz,obtenerSignos(raiz));
-        raiz.hId = raiz.id;
-        var abTree = asignarAlfasBetas(hTree);
-        iniciarBusquedaAlfaBeta();
-        //busquedaAlfaBeta();
-        var objJson = saveNodo(abTree);
-        saveTree(objJson);
-    }
-    */
 
 }]);
 

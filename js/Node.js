@@ -1,12 +1,13 @@
 function Node(){
     this.node_identifier = null;
-    this.node_id = null;
+    this.original_id = null;
+    this.inherit_id = null;
     this.father = null;
     this.left_child = null;
     this.right_child = null;
     this.original_sign = null;
-    this.node_symbol = null;
     this.inherit_sign = null;
+    this.node_symbol = null;
     this.node_type = "";
     this.inherit_signs = {left: "", right: ""};
 
@@ -38,16 +39,46 @@ function Node(){
         else
             this.node_type = "Beta";
     };
+    this.getInheritSigns = function () {
+        var combinations = this.original_sign + this.node_symbol;
+        switch(combinations){
+            case "+->":// return +(-,+) => (-,+)
+                this.inherit_signs.left = -1;
+                this.inherit_signs.right = 1;
+                break;
+            case "-->":// return -(-,+) => (+,-)
+                this.inherit_signs.left = 1;
+                this.inherit_signs.right = -1;
+                break;
+            case "+^"://  return -(-,-) => (+,+)
+                this.inherit_signs.left = 1;
+                this.inherit_signs.right = 1;
+                break;
+            case "-^"://  return +(-,-) => (-,-)
+                this.inherit_signs.left = -1;
+                this.inherit_signs.right = -1;
+                break;
+            case "-v":  // return +(-,-) => (-,-)
+                this.inherit_signs.left = -1;
+                this.inherit_signs.right = -1;
+                break;
+            case "+v": //return +(+,+) => (+,+)
+                this.inherit_signs.left = 1;
+                this.inherit_signs.right = 1;
+                break;
+        }
+    };
     this.json = function () {
         var left_child = {};
         var right_child = {};
         var newNode = {};
         newNode.name =
-            "O := ( " + this.original_sign + ", " + this.node_symbol + " ) " +
+            /*"O :="*/ this.original_id + ", " + this.inherit_id + " ( " + this.original_sign + ", " + this.node_symbol + " ) "
+            + this.inherit_signs.left + ", " + this.inherit_signs.right;/* +
             "H :=( " + this.inherit_sign + ", " + this.node_symbol + " ) " +
             "SH := ( " + this.inherit_signs.left + ", " + this.inherit_signs.right + " ) " +
             "T := ( " + this.node_type + " ) " +
-            "IDs := ( " + this.original_sign + this.node_id + ", " + this.inherit_sign + this.node_id + " )";
+            "IDs := ( " + this.original_id + ", " + this.inherit_id + " )";*/
         newNode.children = [];
         if(this.right_child != null) {
             right_child = this.right_child.json();

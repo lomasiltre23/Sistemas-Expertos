@@ -1015,7 +1015,11 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             + " }";
 
         console.log(mensaje);
-        recorrido();
+        var valor = null;
+        while(valor == null) {
+            valor = recorrido();
+        }
+        alert(valor);
     };
 
     // Creacion  de Arbol
@@ -1280,6 +1284,39 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
 
         console.log(mensaje1);
         console.log(mensaje2);
+        leftList = [];
+        rightList = [];
+        if(isInsat()) return "INSAT";
+        if(isSAT()) return "SAT";
+
+        if(derechos.length > 0 && izquierdos.length > 0){
+            /**
+             * Usar heuristica para seleccionar izquierdo o derecho y agregar a abiertos
+             * El otro se va a pendientes
+             */
+            var betasIzquierdas = izquierdos.countElements(function (e) {
+                return e.marcado;
+            });
+            var betasDerechas = derechos.countElements(function (e) {
+                return e.marcado;
+            });
+
+            var hLeft = izquierdos.length + betasIzquierdas;
+            var hDer = derechos.length + betasDerechas;
+
+            if(hLeft > hDer) angular.copy(izquierdos, abiertos);
+            else if(hLeft < hDer) angular.copy(derechos, abiertos);
+            else angular.copy(izquierdos, abiertos);
+
+        }
+        else if(derechos.length > 0){
+            angular.copy(derechos, abiertos);
+        }
+        else if(izquierdos.length > 0){
+            angular.copy(izquierdos, abiertos);
+        }
+
+        return null;
     }
     function getLeftBeta(nodo) {
         var newNodo = {};
@@ -1316,6 +1353,24 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             getRightBeta(newNodo);
         if(newNodo.right_child != null && !element.marcado)
             getRightBeta(newNodo);
+    }
+
+    function isSAT(){
+        return (abiertoSinBetas(izquierdos) || abiertoSinBetas(derechos));
+    }
+    function isInsat(){
+        return (izquierdos.length == 0 && derechos.length == 0);
+    }
+
+    function abiertoSinBetas(list) {
+        if(list.length > 0) {
+            var count = list.countElements(function (e) {
+                return e.marcado
+            });
+            return count == 0;
+        }
+
+        return false;
     }
     // END Recorrido de Alfas
 

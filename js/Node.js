@@ -96,11 +96,11 @@ function Node(){
         var left_child = {};
         var right_child = {};
         var newNode = {};
-        newNode.name =
-            /*"O :="*/ this.original_id + " ( " + this.original_sign + ", " + this.node_symbol + " ) " +
-            ", " + this.inherit_id + " ( " + this.inherit_sign + ", " + this.node_symbol + " ) "
-            + this.inherit_signs.left + ", " + this.inherit_signs.right;/* +
-            "H :=( " + this.inherit_sign + ", " + this.node_symbol + " ) " +
+        newNode.name = this.inherit_id + "( " + this.node_type +" )";
+            // /*"O :="*/ this.original_id + " ( " + this.original_sign + ", " + this.node_symbol + " ) " +
+            // ", " + this.inherit_id + " ( " + this.inherit_sign + ", " + this.node_symbol + " ) "
+            // + this.inherit_signs.left + ", " + this.inherit_signs.right;/* +
+            /*"H :=( " + this.inherit_sign + ", " + this.node_symbol + " ) " +
             "SH := ( " + this.inherit_signs.left + ", " + this.inherit_signs.right + " ) " +
             "T := ( " + this.node_type + " ) " +
             "IDs := ( " + this.original_id + ", " + this.inherit_id + " )";*/
@@ -132,6 +132,14 @@ Array.prototype.getListStringify = function (valueToPrint) {
         elements += i == 0 ? valueToPrint(this[i]) : "," + valueToPrint(this[i]);
     }
     return elements;
+};
+
+Array.prototype.countElements = function(comparer){
+    var count = 0;
+    for(var i = 0; i < this.length; i++){
+        if(comparer(this[i])) count++;
+    }
+    return count;
 };
 
 // adds an element to the array if it does not already exist using a comparer

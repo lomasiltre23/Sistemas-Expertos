@@ -1353,15 +1353,13 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             getRightBeta(newNodo);
         if(newNodo.right_child != null && !element.marcado)
             getRightBeta(newNodo);
-    }
-
+    }   
     function isSAT(){
         return (abiertoSinBetas(izquierdos) || abiertoSinBetas(derechos));
     }
     function isInsat(){
         return (izquierdos.length == 0 && derechos.length == 0);
     }
-
     function abiertoSinBetas(list) {
         if(list.length > 0) {
             var count = list.countElements(function (e) {

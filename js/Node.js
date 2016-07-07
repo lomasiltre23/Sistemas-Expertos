@@ -40,7 +40,11 @@ function Node(){
             this.node_type = "Beta";
     };
     this.getInheritSigns = function (isRoot) {
-        var combinations = this.original_sign + this.node_symbol;
+        var combinations = "";
+        if(isRoot)
+            combinations = this.original_sign + this.node_symbol;
+        else
+            combinations = this.inherit_sign + this.node_symbol;
         switch(combinations){
             case "+->":// return +(-,+) => (-,+)
                 this.inherit_signs.left = -1;
@@ -96,14 +100,14 @@ function Node(){
         var left_child = {};
         var right_child = {};
         var newNode = {};
-        newNode.name = this.inherit_id + "( " + this.node_type +" )";
+        newNode.name = this.inherit_id + "( " + this.node_type + " )";
             // /*"O :="*/ this.original_id + " ( " + this.original_sign + ", " + this.node_symbol + " ) " +
             // ", " + this.inherit_id + " ( " + this.inherit_sign + ", " + this.node_symbol + " ) "
             // + this.inherit_signs.left + ", " + this.inherit_signs.right;/* +
-            /*"H :=( " + this.inherit_sign + ", " + this.node_symbol + " ) " +
-            "SH := ( " + this.inherit_signs.left + ", " + this.inherit_signs.right + " ) " +
-            "T := ( " + this.node_type + " ) " +
-            "IDs := ( " + this.original_id + ", " + this.inherit_id + " )";*/
+            // /*"H :=( " + this.inherit_sign + ", " + this.node_symbol + " ) " +
+            // "SH := ( " + this.inherit_signs.left + ", " + this.inherit_signs.right + " ) " +
+            // "T := ( " + this.node_type + " ) " +
+            // "IDs := ( " + this.original_id + ", " + this.inherit_id + " )";*/
         newNode.children = [];
         if(this.right_child != null) {
             right_child = this.right_child.json();

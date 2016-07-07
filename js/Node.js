@@ -39,32 +39,56 @@ function Node(){
         else
             this.node_type = "Beta";
     };
-    this.getInheritSigns = function () {
+    this.getInheritSigns = function (isRoot) {
         var combinations = this.original_sign + this.node_symbol;
         switch(combinations){
             case "+->":// return +(-,+) => (-,+)
                 this.inherit_signs.left = -1;
                 this.inherit_signs.right = 1;
+                if(isRoot) {
+                    this.inherit_id = this.original_id;
+                    this.inherit_sign = this.inherit_id > 0 ? "+" : "-";
+                }
                 break;
             case "-->":// return -(-,+) => (+,-)
                 this.inherit_signs.left = 1;
                 this.inherit_signs.right = -1;
+                if(isRoot) {
+                    this.inherit_id = this.original_id * -1;
+                    this.inherit_sign = this.inherit_id > 0 ? "+" : "-";
+                }
                 break;
             case "+^"://  return -(-,-) => (+,+)
                 this.inherit_signs.left = 1;
                 this.inherit_signs.right = 1;
+                if(isRoot) {
+                    this.inherit_id = this.original_id * -1;
+                    this.inherit_sign = this.inherit_id > 0 ? "+" : "-";
+                }
                 break;
             case "-^"://  return +(-,-) => (-,-)
                 this.inherit_signs.left = -1;
                 this.inherit_signs.right = -1;
+                if(isRoot) {
+                    this.inherit_id = this.original_id;
+                    this.inherit_sign = this.inherit_id > 0 ? "+" : "-";
+                }
                 break;
             case "-v":  // return +(-,-) => (-,-)
                 this.inherit_signs.left = -1;
                 this.inherit_signs.right = -1;
+                if(isRoot) {
+                    this.inherit_id = this.original_id;
+                    this.inherit_sign = this.inherit_id > 0 ? "+" : "-";
+                }
                 break;
             case "+v": //return +(+,+) => (+,+)
                 this.inherit_signs.left = 1;
                 this.inherit_signs.right = 1;
+                if(isRoot) {
+                    this.inherit_id = this.original_id;
+                    this.inherit_sign = this.inherit_id > 0 ? "+" : "-";
+                }
                 break;
         }
     };
@@ -73,7 +97,8 @@ function Node(){
         var right_child = {};
         var newNode = {};
         newNode.name =
-            /*"O :="*/ this.original_id + ", " + this.inherit_id + " ( " + this.original_sign + ", " + this.node_symbol + " ) "
+            /*"O :="*/ this.original_id + " ( " + this.original_sign + ", " + this.node_symbol + " ) " +
+            ", " + this.inherit_id + " ( " + this.inherit_sign + ", " + this.node_symbol + " ) "
             + this.inherit_signs.left + ", " + this.inherit_signs.right;/* +
             "H :=( " + this.inherit_sign + ", " + this.node_symbol + " ) " +
             "SH := ( " + this.inherit_signs.left + ", " + this.inherit_signs.right + " ) " +
@@ -99,6 +124,14 @@ Array.prototype.inArray = function(comparer) {
         if(comparer(this[i])) return true;
     }
     return false;
+};
+
+Array.prototype.getListStringify = function (valueToPrint) {
+    var elements = "";
+    for(var i = 0; i < this.length; i++){
+        elements += i == 0 ? valueToPrint(this[i]) : "," + valueToPrint(this[i]);
+    }
+    return elements;
 };
 
 // adds an element to the array if it does not already exist using a comparer

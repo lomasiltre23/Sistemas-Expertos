@@ -950,6 +950,16 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     var current_node;
     var root_node;
     var possible_node_id = null;
+
+    // Variables Recorrido de Alfas
+    var abiertos = [];
+    var izquierdos = [];
+    var derechos = [];
+    var pendientes = [];
+    var cerrados = [];
+    var leftList = [];
+    var rightList = [];
+    // END Variables Recorrido de Alfas
     function initVars() {
         current_node = null;
         root_node = null;
@@ -957,6 +967,13 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         s.atoms_table = [];
         s.node_table = [];
         possible_node_id = null;
+        abiertos = [];
+        izquierdos = [];
+        derechos = [];
+        pendientes = [];
+        cerrados = [];
+        leftList = [];
+        rightList = [];
     }
     // END Variables globales
 
@@ -987,8 +1004,18 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
             if(char == "-"){ i++; char += s.txtExpression.substr(i, 1);}
             if(char != "¬") validateChar(char, prevchar);
         }
-        inheritSigns(root_node);
+        inheritSigns(root_node, true);
         saveTree(root_node.json());
+        getFirstList(root_node);
+        var mensaje = "Lista Inicial:\nAbiertos: { "
+            + abiertos.getListStringify(function (element) {
+            var marc = element.marcado ? "*":"";
+            return element.node.inherit_id + marc;
+        })
+            + " }";
+
+        console.log(mensaje);
+        recorrido();
     };
 
     // Creacion  de Arbol
@@ -1137,29 +1164,165 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     // END Lector expreciones
 
     // Heredar Signos
-    function inheritSigns(nodo){
-        nodo.getInheritSigns();
+    function inheritSigns(nodo, isRoot){
+        nodo.getInheritSigns(isRoot);
+        var originalSign = 0;
+        var inheritSign = 0;
+        var originalAbsId = 0;
         if(nodo.left_child != null){
-            var nodeLeftSign = nodo.left_child.original_sign == "+" ? 1 : -1;
-            nodo.left_child.inherit_sign = (nodeLeftSign * nodo.inherit_signs.left) > 0 ? "+" : "-";
-            nodo.left_child.inherit_id = nodo.left_child.original_id * nodo.inherit_signs.left;
-            inheritSigns(nodo.left_child);
+            originalSign = nodo.left_child.original_sign == "+" ? 1 : -1;
+            inheritSign = nodo.inherit_signs.left * originalSign;
+            originalAbsId = Math.abs(parseInt(nodo.left_child.original_id));
+            nodo.left_child.inherit_sign = inheritSign > 0 ? "+" : "-";
+            nodo.left_child.inherit_id = nodo.left_child.inherit_sign == "+" ? originalAbsId : originalAbsId * -1;
+            inheritSigns(nodo.left_child, false);
         }
 
         if(nodo.right_child != null){
-            var nodeRightSign = nodo.right_child.original_sign == "+" ? 1 : -1;
-            nodo.right_child.inherit_sign = (nodeRightSign * nodo.inherit_signs.right) > 0 ? "+" : "-";
-            nodo.right_child.inherit_id = nodo.right_child.original_id * nodo.inherit_signs.right;
-            inheritSigns(nodo.right_child);
+            originalSign = nodo.right_child.original_sign == "+" ? 1 : -1;
+            inheritSign = nodo.inherit_signs.right * originalSign;
+            originalAbsId = Math.abs(parseInt(nodo.right_child.original_id));
+            nodo.right_child.inherit_sign = inheritSign > 0 ? "+" : "-";
+            nodo.right_child.inherit_id = nodo.right_child.inherit_sign == "+" ? originalAbsId : originalAbsId * -1;
+            inheritSigns(nodo.right_child, false);
         }
-
     }
     //END Heredar Signos
+
+    // Recorrido de Alfas
+    function getFirstList(nodo) {
+        var newNodo = {};
+        var element = {};
+        angular.copy(nodo, newNodo);
+        if(newNodo.node_type == "Alfa" || re.test(newNodo.node_symbol))
+            element.marcado = false;
+        if(newNodo.node_type == "Beta")
+            element.marcado = true;
+        element.node = newNodo;
+        abiertos.pushIfNotExist(element, function (e) {
+            return element.node.inherit_id == e.node.inherit_id;
+        });
+
+        if(newNodo.left_child != null && !element.marcado)
+            getFirstList(newNodo.left_child);
+        if(newNodo.right_child != null && !element.marcado)
+            getFirstList(newNodo.right_child);
+    }
+    function recorrido(){
+        // Obtener beta para abrirla
+        var beta = {};
+        for(var i = 0; i < abiertos.length; i++){
+            if(abiertos[i].marcado){
+                abiertos[i].marcado = false;
+                angular.copy(abiertos[i], beta);
+                break;
+            }
+        }
+        angular.copy(abiertos, izquierdos);
+        angular.copy(abiertos, derechos);
+        // Abrir beta izquierda
+        getLeftBeta(beta.node);
+        // Abrir beta derecha
+        getRightBeta(beta.node);
+
+        var mensaje1 = "I:" + beta.node.inherit_id + "-> { "
+            + izquierdos.getListStringify(function (element) {
+                var marca = element.marcado ? "*":"";
+                return element.node.inherit_id + marca;
+            }) + " } -> "
+            + leftList.getListStringify(function (element) {
+                var marc = element.marcado ? "*":"";
+                return element.node.inherit_id + marc;
+            });
+
+        var mensaje2 = "D:" + beta.node.inherit_id + "-> { "
+            + derechos.getListStringify(function (element) {
+                var marca = element.marcado ? "*":"";
+                return element.node.inherit_id + marca;
+            }) + " } -> "
+            + rightList.getListStringify(function (element) {
+                var marca = element.marcado ? "*":"";
+                return element.node.inherit_id + marca;
+            });
+
+        // Verificar si no existe contrario en lista izquierda
+        angular.forEach(leftList, function (value, key) {
+            if(izquierdos.inArray(function (element) {
+                    return value.node.inherit_id * -1 == element.node.inherit_id;
+                })){
+               izquierdos = [];
+            }
+        });
+        // Verificar si no existe contrario en lista derecha
+        angular.forEach(rightList, function (value, key) {
+            if(derechos.inArray(function (element) {
+                    return value.node.inherit_id * -1 == element.node.inherit_id;
+                })){
+                derechos = [];
+            }
+        });
+        // Verificar si no existe en lista izquierda
+        if(izquierdos.length > 0){
+            angular.forEach(leftList, function (value, key) {
+                izquierdos.pushIfNotExist(value,function (element) {
+                    return value.node.inherit_id == element.node.inherit_id;
+                });
+            });
+        }
+        // Verificar si no existe en lista derecha
+        if(derechos.length > 0){
+            angular.forEach(rightList, function (value, key) {
+                derechos.pushIfNotExist(value,function (element) {
+                    return value.node.inherit_id == element.node.inherit_id;
+                });
+            });
+        }
+
+        console.log(mensaje1);
+        console.log(mensaje2);
+    }
+    function getLeftBeta(nodo) {
+        var newNodo = {};
+        var element = {};
+        angular.copy(nodo.left_child, newNodo);
+        if(newNodo.node_type == "Alfa" || re.test(newNodo.node_symbol))
+            element.marcado = false;
+        if(newNodo.node_type == "Beta")
+            element.marcado = true;
+        element.node = newNodo;
+        leftList.pushIfNotExist(element, function (e) {
+            return element.node.inherit_id == e.node.inherit_id;
+        });
+
+        if(newNodo.left_child != null && !element.marcado)
+            getLeftBeta(newNodo);
+        if(newNodo.right_child != null && !element.marcado)
+            getLeftBeta(newNodo);
+    }
+    function getRightBeta(nodo){
+        var newNodo = {};
+        var element = {};
+        angular.copy(nodo.right_child, newNodo);
+        if(newNodo.node_type == "Alfa" || re.test(newNodo.node_symbol))
+            element.marcado = false;
+        if(newNodo.node_type == "Beta")
+            element.marcado = true;
+        element.node = newNodo;
+        rightList.pushIfNotExist(element, function (e) {
+            return element.node.inherit_id == e.node.inherit_id;
+        });
+
+        if(newNodo.left_child != null && !element.marcado)
+            getRightBeta(newNodo);
+        if(newNodo.right_child != null && !element.marcado)
+            getRightBeta(newNodo);
+    }
+    // END Recorrido de Alfas
 
     //END Creacion Arbol
     function saveTree(tree){
         var jsonData = JSON.stringify(tree);
-        console.log(jsonData);
+        // console.log(jsonData);
         var r = new XMLHttpRequest();
         r.open("POST", "/saveTree", true);
         r.getAllResponseHeaders();

@@ -950,6 +950,7 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     var current_node;
     var root_node;
     var possible_node_id = null;
+    s.calculartaut = true;
 
     // Variables Recorrido de Alfas
     var abiertos = [];
@@ -959,6 +960,8 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
     var cerrados = [];
     var leftList = [];
     var rightList = [];
+    var tmpValue = null;
+    var tmpTxtExpression = "";
     // END Variables Recorrido de Alfas
     function initVars() {
         current_node = null;
@@ -979,6 +982,9 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
 
     // Validacion FRONT-END expresion
     s.validateExpression = function(){return openBrakets() == closedBrakets() && s.txtExpression != "";};
+    s.calcularTaut = function () {
+        s.calculartaut = !s.calculartaut;
+    };
     function openBrakets(){
         var counter = 0;
         for(var i = 0; i < s.txtExpression.length; i++)
@@ -1019,7 +1025,25 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
         while(valor == null) {
             valor = recorrido();
         }
-        alert(valor);
+        if(s.calculartaut) {
+            if (tmpValue == null) {
+                tmpValue = valor;
+                tmpTxtExpression = s.txtExpression;
+                s.txtExpression = s.txtExpression.charAt(0) == "¬" ? s.txtExpression.substr(1) : "¬" + s.txtExpression;
+                s.readExpression();
+            }
+            else {
+                if (tmpValue != valor)
+                    alert("TAUT");
+                else
+                    alert(tmpValue);
+                tmpValue = null;
+                s.txtExpression = tmpTxtExpression;
+            }
+        }else{
+            alert(valor);
+        }
+
     };
 
     // Creacion  de Arbol

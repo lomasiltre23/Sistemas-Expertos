@@ -3,6 +3,10 @@
         <input type="text" id="expresion" ng-model="txtExpression">
         <label for="expresion">Expresion</label>
         <a class="btn waves-effect waves-light" ng-click="readExpression();" ng-show="validateExpression();">Iniciar</a>
+        <a class="btn waves-effect waves-light" ng-click="calcularTaut()">Calcular Taut:
+            <span ng-show="calculartaut">TRUE</span>
+            <span ng-show="!calculartaut">FALSE</span>
+        </a>
     </div>
     <div>
         <div id="tree-container" style="overflow: hidden;">

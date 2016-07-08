@@ -1033,7 +1033,13 @@ app.controller("AlfaBeta",["$scope","$http", function (s, http) {
                 s.readExpression();
             }
             else {
-                if (tmpValue != valor)
+                // Opcion chris
+                // if (tmpValue != valor)
+                //     alert("TAUT");
+                // else
+                //     alert(tmpValue);
+                // Opcion Ivan
+                if(tmpValue == "SAT" && valor == "INSAT")
                     alert("TAUT");
                 else
                     alert(tmpValue);

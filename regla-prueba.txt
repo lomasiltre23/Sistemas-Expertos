@@ -1,0 +1,69 @@
+
+¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))		i1 
+¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))	i2 
+¬((P->(Q->R))->((PvS)->(¬(Q^¬R)vS)))		i3 
+¬((P->(Q->R))->((PvS)->((QvR)vS)))			S1
+
+
+
+((¬(i1vi2)^S1)v¬(i1^i2))			t1
+
+((¬(i1vi2)^S1)v¬(i1^i2))			t1
+t1'   P>A  Q>B
+
+(t1v¬t1')  P1					T
+¬(t1v¬t1')  P2
+(t1v¬t1')v S1  P3
+(t1v¬t1') ^ S1 P4
+P4 v P2		P5
+
+
+//eSPeciAl 1
+
+	//dA un cAmino imPoSiBle
+(¬((P->(Q->R))->((PvS)->((QvR)vS)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))//dA un cAmino imPoSiBle
+
+(¬((P->(Q->R))->((PvS)->((QvR)vS)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))//dA un cAmino PoSiBle
+
+(¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))v¬((P->(Q->R))->((PvS)->((QvR)vS))))//cAmino PoSiBle mAS lARgo
+
+
+SAT
+t1
+
+((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))
+
+SAT
+t1'
+
+((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S))))))
+
+SAT
+(t1v¬t1')  P1	
+
+(((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))v¬((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))))
+
+INSAT
+¬(t1v¬t1') P2
+
+¬(((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))v¬((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))))
+
+SAT
+(t1v¬t1')v S1  P3
+
+((((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))v¬((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))))v¬((P->(Q->R))->((PvS)->((QvR)vS))))
+
+SAT
+(t1v¬t1') ^ S1 P4
+
+((((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))v¬((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))
+
+SAT
+PS4 v Pi2		P5
+
+(((((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))v¬((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))v¬((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S))))))))
+
+SAT
+PS4 v Pt2		P5
+
+(((((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))v¬((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v(((¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))v¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S)))))^¬((P->(Q->R))->((PvS)->((QvR)vS))))v¬(¬(((¬PvQ)->(P->Q))^((P->Q)->(¬PvQ)))^¬(((P^Q)v¬(R^¬S))->((Pv(R->S))^(Qv(R->S))))))v¬((¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))v¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S)))))^¬((A->(B->R))->((AvS)->((BvR)vS))))v¬(¬(((¬AvB)->(A->B))^((A->B)->(¬AvB)))^¬(((A^B)v¬(R^¬S))->((Av(R->S))^(Bv(R->S))))))))
